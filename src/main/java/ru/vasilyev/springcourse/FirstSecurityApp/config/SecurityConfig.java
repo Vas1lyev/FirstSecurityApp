@@ -1,4 +1,5 @@
-//package ru.vasilyev.springcourse.FirstSecurityApp.config;
+//
+package ru.vasilyev.springcourse.FirstSecurityApp.config;
 //
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.context.annotation.Bean;
@@ -7,147 +8,118 @@
 //import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 //import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 //import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-//import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
-//import org.springframework.security.core.Authentication;
+//import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+//import org.springframework.security.crypto.password.PasswordEncoder;
 //import org.springframework.security.web.SecurityFilterChain;
-//import ru.vasilyev.springcourse.FirstSecurityApp.security.AuthProviderImpl;
-//
-//import java.security.AuthProvider;
+//import ru.vasilyev.springcourse.FirstSecurityApp.services.PersonDetailsService;
 //
 //@Configuration
 //@EnableWebSecurity
 //public class SecurityConfig {
 //
-//    private final AuthProviderImpl authProvider;
+//    private final PersonDetailsService personDetailsService;
 //
 //    @Autowired
-//    public SecurityConfig(AuthProviderImpl authProvider) {
-//        this.authProvider = authProvider;
+//    public SecurityConfig(PersonDetailsService personDetailsService) {
+//        this.personDetailsService = personDetailsService;
 //    }
 //
 //    @Bean
 //    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 //        http
-//                .authorizeHttpRequests((requests) -> requests
-//                        .requestMatchers("/", "/home", "/login", "/error", "/css/**", "/js/**").permitAll()  // Добавляем разрешённые URL
-//                        .anyRequest().authenticated()  // Все остальные запросы требуют аутентификации
+//                .authorizeHttpRequests(authz -> authz
+//                        .requestMatchers("/auth/login", "/error").permitAll()  // Разрешить доступ к страницам логина и ошибки
+//                        .anyRequest().authenticated()                          // Все остальные запросы требуют аутентификации
 //                )
-//                .formLogin((form) -> form
-//                        .loginPage("/login")  // Указываем страницу логина
-//                        .permitAll()          // Разрешаем всем доступ к странице логина
-//                )
-//                .logout(LogoutConfigurer::permitAll);  // Настройка выхода из системы
+//                .formLogin(form -> form
+//                        .loginPage("/auth/login")              // Указываем страницу логина
+//                        .loginProcessingUrl("/process_login")  // URL для отправки формы логина
+//                        .defaultSuccessUrl("/hello", true)     // Перенаправление после успешного входа
+//                        .failureUrl("/auth/login?error")       // Перенаправление при неудачном входе
+//                        .permitAll()                           // Разрешаем доступ ко всем пользователям
+//                );
 //
 //        return http.build();
 //    }
 //
-//
-//
-//    @Bean
-//    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-//        AuthenticationManagerBuilder authenticationManagerBuilder =
-//                http.getSharedObject(AuthenticationManagerBuilder.class);
-//        authenticationManagerBuilder.authenticationProvider(authProvider);
-//        return authenticationManagerBuilder.build();
-//    }
-//}
-
-
-//package ru.vasilyev.springcourse.FirstSecurityApp.config;
-//
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.context.annotation.Bean;
-//import org.springframework.context.annotation.Configuration;
-//import org.springframework.security.authentication.AuthenticationManager;
-//import org.springframework.security.authentication.AuthenticationProvider;
-//import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-//import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-//import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-//import org.springframework.security.web.SecurityFilterChain;
-//import ru.vasilyev.springcourse.FirstSecurityApp.security.AuthProviderImpl;
-//
-//@Configuration
-//@EnableWebSecurity
-//public class SecurityConfig {
-//
-//    private final AuthProviderImpl authProvider;
-//
-//    @Autowired
-//    public SecurityConfig(AuthProviderImpl authProvider) {
-//        this.authProvider = authProvider;
-//    }
-//
-//    @Bean
-//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//        http
-//                .authorizeHttpRequests((requests) -> requests
-//                        .requestMatchers("/", "/home", "/login", "/error", "/css/**", "/js/**").permitAll()
-//                        .anyRequest().authenticated()
-//                )
-//                .formLogin((form) -> form
-//                        .loginPage("/login")
-//                        .permitAll()
-//                )
-//                .logout((logout) -> logout.permitAll());
-//
-//        return http.build();
-//    }
+////    @Bean
+////    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+////        http
+////                .authorizeHttpRequests((requests) -> requests
+////                        .requestMatchers("/", "/home", "/error", "/css/**", "/js/**").permitAll()
+////                        .anyRequest().authenticated()
+////                )
+////                .formLogin(AbstractAuthenticationFilterConfigurer::permitAll
+////                )
+////                .logout(LogoutConfigurer::permitAll);
+////
+////        return http.build();
+////    }
 //
 //    @Bean
 //    public AuthenticationManager authManager(HttpSecurity http) throws Exception {
 //        AuthenticationManagerBuilder authBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
-//        authBuilder.authenticationProvider(authProvider);  // Используем ваш AuthProviderImpl
+//        authBuilder.userDetailsService(personDetailsService);
 //        return authBuilder.build();
+//    }
+//
+//    @Bean
+//    public PasswordEncoder getPasswordEncoder() {
+//        return NoOpPasswordEncoder.getInstance();
 //    }
 //}
 
 
 
-
-
-package ru.vasilyev.springcourse.FirstSecurityApp.config;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractAuthenticationFilterConfigurer;
-import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import ru.vasilyev.springcourse.FirstSecurityApp.security.AuthProviderImpl;
+import ru.vasilyev.springcourse.FirstSecurityApp.services.PersonDetailsService;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final AuthProviderImpl authProvider;
+    private final PersonDetailsService personDetailsService;
 
-    @Autowired
-    public SecurityConfig(AuthProviderImpl authProvider) {
-        this.authProvider = authProvider;
+    public SecurityConfig(PersonDetailsService personDetailsService) {
+        this.personDetailsService = personDetailsService;
     }
 
-//    @Bean
-//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//        http
-//                .authorizeHttpRequests((requests) -> requests
-//                        .requestMatchers("/", "/home", "/error", "/css/**", "/js/**").permitAll()
-//                        .anyRequest().authenticated()
-//                )
-//                .formLogin(AbstractAuthenticationFilterConfigurer::permitAll
-//                )
-//                .logout(LogoutConfigurer::permitAll);
-//
-//        return http.build();
-//    }
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/auth/login", "/error").permitAll()  // Разрешить доступ к страницам логина и ошибки
+                        .anyRequest().authenticated()                           // Все остальные запросы требуют аутентификации
+                )
+                .formLogin(form -> form
+                        .loginPage("/auth/login")                // Указываем страницу логина
+                        .loginProcessingUrl("/process_login")    // URL для обработки логина
+                        .defaultSuccessUrl("/hello", true)       // Перенаправление после успешного входа
+                        .failureUrl("/auth/login?error")         // Перенаправление при неудачном входе
+                        .permitAll()                             // Разрешаем доступ ко всем пользователям
+                );
+
+        return http.build();
+    }
+
 
     @Bean
     public AuthenticationManager authManager(HttpSecurity http) throws Exception {
         AuthenticationManagerBuilder authBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
-        authBuilder.authenticationProvider(authProvider);
+        authBuilder.userDetailsService(personDetailsService).passwordEncoder(getPasswordEncoder());
         return authBuilder.build();
+    }
+
+    @Bean
+    public PasswordEncoder getPasswordEncoder() {
+        return NoOpPasswordEncoder.getInstance();
     }
 }
