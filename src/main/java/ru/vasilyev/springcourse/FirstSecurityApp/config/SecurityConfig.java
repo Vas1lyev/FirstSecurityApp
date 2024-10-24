@@ -80,6 +80,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import ru.vasilyev.springcourse.FirstSecurityApp.services.PersonDetailsService;
 
 @Configuration
@@ -96,7 +97,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/auth/login", "/error").permitAll()  // Разрешить доступ к страницам логина и ошибки
+                        .requestMatchers("/auth/login", "/error", "/auth/registration").permitAll()  // Разрешить доступ к страницам логина и ошибки
                         .anyRequest().authenticated()                           // Все остальные запросы требуют аутентификации
                 )
                 .formLogin(form -> form
@@ -104,8 +105,14 @@ public class SecurityConfig {
                         .loginProcessingUrl("/process_login")    // URL для обработки логина
                         .defaultSuccessUrl("/hello", true)       // Перенаправление после успешного входа
                         .failureUrl("/auth/login?error")         // Перенаправление при неудачном входе
-                        .permitAll()                             // Разрешаем доступ ко всем пользователям
+                        .permitAll()// Разрешаем доступ ко всем пользователям
+                ).logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/auth/login")
+                        .permitAll()                      // Разрешить всем доступ к /logout
+                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))  // Разрешить GET-запросы на /logout
                 );
+
 
         return http.build();
     }
