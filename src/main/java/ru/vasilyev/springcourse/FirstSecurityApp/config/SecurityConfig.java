@@ -75,9 +75,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -85,6 +86,7 @@ import ru.vasilyev.springcourse.FirstSecurityApp.services.PersonDetailsService;
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private final PersonDetailsService personDetailsService;
@@ -97,8 +99,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/admin").hasRole("ADMIN")
                         .requestMatchers("/auth/login", "/error", "/auth/registration").permitAll()  // Разрешить доступ к страницам логина и ошибки
-                        .anyRequest().authenticated()                           // Все остальные запросы требуют аутентификации
+                        .anyRequest().hasAnyRole("USER", "ADMIN")                           // Все остальные запросы требуют аутентификации
                 )
                 .formLogin(form -> form
                         .loginPage("/auth/login")                // Указываем страницу логина
@@ -110,7 +113,7 @@ public class SecurityConfig {
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/auth/login")
                         .permitAll()                      // Разрешить всем доступ к /logout
-                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))  // Разрешить GET-запросы на /logout
+                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "POST"))  // Разрешить GET-запросы на /logout
                 );
 
 
@@ -127,6 +130,6 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder getPasswordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
+        return new BCryptPasswordEncoder();
     }
 }
